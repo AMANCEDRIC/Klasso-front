@@ -1,0 +1,296 @@
+<!-- Container principal -->
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Breadcrumb et navigation -->
+    <div class="mb-6">
+      <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+          <li class="inline-flex items-center">
+            <button
+              (click)="goBackToClassrooms()"
+              class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+              <i class="fas fa-chalkboard mr-2"></i>
+              Classes
+            </button>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+              <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Vue d'ensemble</span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- En-tête avec statistiques globales -->
+    <div class="mb-8">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">
+            Vue d'ensemble - {{ classroom?.name || 'Classe' }}
+          </h1>
+          <p class="mt-2 text-sm text-gray-600">
+            {{ classroom?.level }} - {{ classroom?.subject }} | {{ classroom?.academicYear }}
+          </p>
+        </div>
+        
+        <!-- Statistiques globales -->
+        <div class="mt-6 lg:mt-0 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-blue-600">{{ totalStudents }}</div>
+              <div class="text-sm text-gray-600">Élèves</div>
+            </div>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+            <div class="text-center">
+              <div class="text-2xl font-bold" [ngClass]="getAverageColor(classroomAverage)">
+                {{ classroomAverage | number:'1.1-1' }}/20
+              </div>
+              <div class="text-sm text-gray-600">Moyenne classe</div>
+            </div>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+            <div class="text-center">
+              <div class="text-2xl font-bold" [ngClass]="getAttendanceRateColor(globalAttendanceRate)">
+                {{ globalAttendanceRate | number:'1.1-1' }}%
+              </div>
+              <div class="text-sm text-gray-600">Présence globale</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="mb-6 flex flex-wrap gap-3">
+      <button
+        (click)="viewAllStudents()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+        <i class="fas fa-users mr-2"></i>
+        Gérer les élèves
+      </button>
+      <button
+        (click)="manageGrades()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+        <i class="fas fa-star mr-2"></i>
+        Gérer les notes
+      </button>
+      <button
+        (click)="manageAttendances()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+        <i class="fas fa-calendar-check mr-2"></i>
+        Gérer les présences
+      </button>
+    </div>
+
+    <!-- Message d'erreur -->
+    <div *ngIf="error" class="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <i class="fas fa-exclamation-circle text-red-400"></i>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
+        </div>
+        <div class="ml-auto pl-3">
+          <button (click)="clearError()" class="text-red-400 hover:text-red-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- État de chargement -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <p class="mt-4 text-gray-600">Chargement des données...</p>
+    </div>
+
+    <!-- Tableau récapitulatif -->
+    <div *ngIf="!isLoading && studentOverviews.length > 0" class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Récapitulatif des élèves</h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">
+          Vue d'ensemble des performances et présences de tous les élèves
+        </p>
+      </div>
+      
+      <!-- Version Desktop - Tableau -->
+      <div class="hidden lg:block overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th 
+                (click)="sortData('name')"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                <div class="flex items-center">
+                  Élève
+                  <i [class]="getSortIcon('name')" class="ml-2 text-xs"></i>
+                </div>
+              </th>
+              <th 
+                (click)="sortData('average')"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                <div class="flex items-center">
+                  Moyenne
+                  <i [class]="getSortIcon('average')" class="ml-2 text-xs"></i>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Notes
+              </th>
+              <th 
+                (click)="sortData('attendanceRate')"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                <div class="flex items-center">
+                  Présence
+                  <i [class]="getSortIcon('attendanceRate')" class="ml-2 text-xs"></i>
+                </div>
+              </th>
+              <th 
+                (click)="sortData('absentCount')"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                <div class="flex items-center">
+                  Absences
+                  <i [class]="getSortIcon('absentCount')" class="ml-2 text-xs"></i>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let overview of studentOverviews" class="hover:bg-gray-50">
+              <!-- Élève -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span class="text-purple-600 font-medium text-sm">
+                      {{ overview.student.firstName.charAt(0) }}{{ overview.student.lastName.charAt(0) }}
+                    </span>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ overview.student.firstName }} {{ overview.student.lastName }}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      {{ overview.student.dateOfBirth | date:'dd/MM/yyyy' }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              
+              <!-- Moyenne -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-bold" [ngClass]="getAverageColor(overview.average)">
+                  {{ overview.average > 0 ? (overview.average | number:'1.1-1') + '/20' : 'N/A' }}
+                </div>
+              </td>
+              
+              <!-- Notes -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ overview.totalGrades }} note(s)</div>
+              </td>
+              
+              <!-- Présence -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium" [ngClass]="getAttendanceRateColor(overview.attendanceRate)">
+                  {{ overview.attendanceRate | number:'1.1-1' }}%
+                </div>
+                <div class="text-xs text-gray-500">
+                  {{ overview.presentCount }}P / {{ overview.lateCount }}R / {{ overview.totalAttendances }}T
+                </div>
+              </td>
+              
+              <!-- Absences -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-red-600 font-medium">{{ overview.absentCount }}</div>
+                <div class="text-xs text-blue-600">{{ overview.excusedCount }} excusées</div>
+              </td>
+              
+              <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button
+                  (click)="viewStudentDetails(overview.student)"
+                  class="text-purple-600 hover:text-purple-900">
+                  Détails
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Version Mobile - Cartes -->
+      <div class="lg:hidden">
+        <div class="p-4 space-y-4">
+          <div *ngFor="let overview of studentOverviews" class="border border-gray-200 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <div class="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span class="text-purple-600 font-medium text-sm">
+                    {{ overview.student.firstName.charAt(0) }}{{ overview.student.lastName.charAt(0) }}
+                  </span>
+                </div>
+                <div class="ml-3">
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ overview.student.firstName }} {{ overview.student.lastName }}
+                  </div>
+                </div>
+              </div>
+              <button
+                (click)="viewStudentDetails(overview.student)"
+                class="text-purple-600 hover:text-purple-900 text-sm">
+                Détails
+              </button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-500">Moyenne:</span>
+                <span class="ml-2 font-medium" [ngClass]="getAverageColor(overview.average)">
+                  {{ overview.average > 0 ? (overview.average | number:'1.1-1') + '/20' : 'N/A' }}
+                </span>
+              </div>
+              <div>
+                <span class="text-gray-500">Notes:</span>
+                <span class="ml-2 text-gray-900">{{ overview.totalGrades }}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Présence:</span>
+                <span class="ml-2 font-medium" [ngClass]="getAttendanceRateColor(overview.attendanceRate)">
+                  {{ overview.attendanceRate | number:'1.1-1' }}%
+                </span>
+              </div>
+              <div>
+                <span class="text-gray-500">Absences:</span>
+                <span class="ml-2 text-red-600 font-medium">{{ overview.absentCount }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- État vide -->
+    <div *ngIf="!isLoading && studentOverviews.length === 0" class="text-center py-12">
+      <div class="mx-auto h-24 w-24 text-gray-400">
+        <i class="fas fa-users text-6xl"></i>
+      </div>
+      <h3 class="mt-4 text-lg font-medium text-gray-900">Aucun élève</h3>
+      <p class="mt-2 text-gray-500">Commencez par ajouter des élèves à cette classe</p>
+      <div class="mt-6">
+        <button
+          (click)="viewAllStudents()"
+          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+          <i class="fas fa-plus mr-2"></i>
+          Ajouter des élèves
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,242 @@
 /* You can add global styles to this file, and also import other style files */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables CSS personnalisées */
+:root {
+  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --secondary-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  --shadow-medium: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-strong: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  
+  --animation-bounce: bounce 0.6s ease-in-out;
+  --animation-fade-in: fadeIn 0.5s ease-out;
+  --animation-slide-up: slideUp 0.4s ease-out;
+}
+
+/* Configuration de base */
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    @apply bg-gray-50 min-h-screen;
+    @apply text-gray-800 antialiased;
+    line-height: 1.5;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-gray-900;
+    line-height: 1.25;
+  }
+  
+  h1 { @apply text-2xl lg:text-3xl; }
+  h2 { @apply text-xl lg:text-2xl; }
+  h3 { @apply text-lg lg:text-xl; }
+}
+
+/* Composants personnalisés */
+@layer components {
+  /* Boutons professionnels */
+  .btn-primary {
+    @apply relative overflow-hidden bg-indigo-600 text-white font-medium px-4 py-2.5 rounded-lg;
+    @apply hover:bg-indigo-700 transform hover:scale-[1.02] transition-all duration-200;
+    @apply shadow-sm hover:shadow-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-indigo-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-gray-700 font-medium px-4 py-2.5 rounded-lg border border-gray-300;
+    @apply hover:bg-gray-50 hover:border-gray-400 transform hover:scale-[1.02] transition-all duration-200;
+    @apply shadow-sm hover:shadow-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-gray-200;
+  }
+  
+  .btn-success {
+    @apply bg-emerald-600 text-white font-medium px-4 py-2.5 rounded-lg;
+    @apply hover:bg-emerald-700 transform hover:scale-[1.02] transition-all duration-200;
+    @apply shadow-sm hover:shadow-md;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 text-white font-medium px-4 py-2.5 rounded-lg;
+    @apply hover:bg-red-700 transform hover:scale-[1.02] transition-all duration-200;
+    @apply shadow-sm hover:shadow-md;
+  }
+
+  /* Cartes élégantes */
+  .card {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply card hover:scale-[1.01] hover:-translate-y-0.5;
+  }
+  
+  .card-gradient {
+    @apply bg-gradient-to-br from-white to-gray-50/50 rounded-lg border border-gray-200;
+    @apply shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  /* Formulaires raffinés */
+  .form-input {
+    @apply w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white;
+    @apply focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-200;
+    @apply placeholder-gray-500 text-sm;
+  }
+  
+  .form-select {
+    @apply form-input pr-8 appearance-none bg-white;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+  }
+
+  /* Navigation professionnelle */
+  .nav-item {
+    @apply px-3 py-2 rounded-md text-gray-600 hover:text-indigo-600 hover:bg-indigo-50;
+    @apply transition-all duration-200 font-medium text-sm;
+  }
+  
+  .nav-item-active {
+    @apply nav-item text-indigo-600 bg-indigo-100;
+  }
+
+  /* Modales élégantes */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/30 backdrop-blur-sm z-50;
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  .modal-content {
+    @apply bg-white rounded-lg shadow-xl border-0 overflow-hidden;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  /* États et badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-emerald-100 text-emerald-800;
+  }
+  
+  .badge-warning {
+    @apply badge bg-amber-100 text-amber-800;
+  }
+  
+  .badge-danger {
+    @apply badge bg-red-100 text-red-800;
+  }
+  
+  .badge-info {
+    @apply badge bg-blue-100 text-blue-800;
+  }
+
+  /* Tables professionnelles */
+  .table-modern {
+    @apply w-full bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200;
+  }
+  
+  .table-modern thead {
+    @apply bg-gray-50;
+  }
+  
+  .table-modern th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider;
+  }
+  
+  .table-modern td {
+    @apply px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-t border-gray-100;
+  }
+  
+  .table-modern tbody tr {
+    @apply hover:bg-gray-50 transition-colors duration-150;
+  }
+
+  /* Statistiques équilibrées */
+  .stat-card {
+    @apply card p-4 text-center hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .stat-number {
+    @apply text-2xl font-bold text-indigo-600;
+  }
+  
+  .stat-label {
+    @apply text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide;
+  }
+  
+  .stat-icon {
+    @apply w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mb-3 mx-auto;
+  }
+}
+
+/* Animations subtiles */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading states */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Personnalisation de la scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
