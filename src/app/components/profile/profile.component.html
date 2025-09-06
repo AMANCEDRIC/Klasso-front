@@ -1,0 +1,166 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Mon Profil</h1>
+          <p class="mt-2 text-gray-600">Gérez vos informations personnelles</p>
+        </div>
+        <div class="flex space-x-3">
+          <button
+            (click)="goToDashboard()"
+            class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Retour au tableau de bord
+          </button>
+          <button
+            (click)="logout()"
+            class="btn-danger">
+            <i class="fas fa-sign-out-alt mr-2"></i>
+            Se déconnecter
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+      <div class="text-center">
+        <i class="fas fa-spinner loading-spinner text-4xl text-indigo-600 mb-4"></i>
+        <p class="text-gray-600">Chargement du profil...</p>
+      </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="!isLoading && user" class="space-y-6">
+      
+      <!-- Profile Card -->
+      <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-8">
+          <div class="flex items-center">
+            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <i class="fas fa-user text-3xl text-indigo-600"></i>
+            </div>
+            <div class="ml-6 text-white">
+              <h2 class="text-2xl font-bold">{{ user.firstName }} {{ user.lastName }}</h2>
+              <p class="text-indigo-100">{{ user.email }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="px-6 py-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Personal Information -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-user-circle text-indigo-600 mr-2"></i>
+                Informations personnelles
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <i class="fas fa-id-card text-gray-400 w-5 mr-3"></i>
+                  <div>
+                    <p class="text-sm text-gray-500">ID Utilisateur</p>
+                    <p class="font-medium text-gray-900">#{{ user.id }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-envelope text-gray-400 w-5 mr-3"></i>
+                  <div>
+                    <p class="text-sm text-gray-500">Email</p>
+                    <p class="font-medium text-gray-900">{{ user.email }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-user text-gray-400 w-5 mr-3"></i>
+                  <div>
+                    <p class="text-sm text-gray-500">Prénom</p>
+                    <p class="font-medium text-gray-900">{{ user.firstName }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-user text-gray-400 w-5 mr-3"></i>
+                  <div>
+                    <p class="text-sm text-gray-500">Nom</p>
+                    <p class="font-medium text-gray-900">{{ user.lastName }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Account Information -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-info-circle text-indigo-600 mr-2"></i>
+                Informations du compte
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <i class="fas fa-calendar-plus text-gray-400 w-5 mr-3"></i>
+                  <div>
+                    <p class="text-sm text-gray-500">Compte créé le</p>
+                    <p class="font-medium text-gray-900">{{ user.createdAt | date:'dd/MM/yyyy à HH:mm' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-calendar-edit text-gray-400 w-5 mr-3"></i>
+                  <div>
+                    <p class="text-sm text-gray-500">Dernière mise à jour</p>
+                    <p class="font-medium text-gray-900">{{ user.updatedAt | date:'dd/MM/yyyy à HH:mm' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-shield-alt text-gray-400 w-5 mr-3"></i>
+                  <div>
+                    <p class="text-sm text-gray-500">Statut</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <i class="fas fa-check-circle mr-1"></i>
+                      Actif
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-white shadow-lg rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fas fa-bolt text-indigo-600 mr-2"></i>
+          Actions rapides
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            (click)="loadUserProfile()"
+            class="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <i class="fas fa-sync-alt text-indigo-600 mr-2"></i>
+            <span class="text-sm font-medium text-gray-700">Actualiser</span>
+          </button>
+          <button
+            class="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <i class="fas fa-key text-indigo-600 mr-2"></i>
+            <span class="text-sm font-medium text-gray-700">Changer le mot de passe</span>
+          </button>
+          <button
+            class="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <i class="fas fa-cog text-indigo-600 mr-2"></i>
+            <span class="text-sm font-medium text-gray-700">Paramètres</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="message && !isSuccess" class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div class="flex items-center">
+        <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>
+        <p class="text-sm text-red-800">{{ message }}</p>
+      </div>
+    </div>
+  </div>
+</div>

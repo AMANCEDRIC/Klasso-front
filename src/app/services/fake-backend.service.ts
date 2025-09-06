@@ -11,11 +11,16 @@ import {
   Attendance, CreateAttendanceRequest, AttendanceStatus
 } from '../models';
 
+// Interface pour le fake backend avec mot de passe
+interface UserWithPassword extends User {
+  password: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class FakeBackendService {
-  private users: User[] = [];
+  private users: UserWithPassword[] = [];
   private establishments: Establishment[] = [];
   private classrooms: Classroom[] = [];
   private students: Student[] = [];
@@ -28,14 +33,14 @@ export class FakeBackendService {
 
   private initializeData() {
     // Utilisateur de test
-    const testUser: User = {
-      id: '1',
+    const testUser: UserWithPassword = {
+      id: 1,
       email: 'prof@klaso.com',
       firstName: 'Naounou',
       lastName: 'France Liliane',
       password: 'password123',
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01')
+      createdAt: '2024-01-01T10:00:00Z',
+      updatedAt: '2024-01-01T10:00:00Z'
     };
     this.users.push(testUser);
 
@@ -159,7 +164,7 @@ export class FakeBackendService {
       delay(200),
       map(() => {
         const userId = token.replace('fake-jwt-token-', '');
-        const user = this.users.find(u => u.id === userId);
+        const user = this.users.find(u => u.id.toString() === userId);
         if (user) {
           const { password, ...userWithoutPassword } = user;
           return userWithoutPassword;

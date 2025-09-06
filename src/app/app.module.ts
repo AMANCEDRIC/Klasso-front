@@ -7,6 +7,9 @@ import { CommonModule } from '@angular/common';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './components/login/login.component';
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+import { ProfileComponent } from './components/profile/profile.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { EstablishmentListComponent } from './components/establishment-list/establishment-list.component';
 import { ClassroomListComponent } from './components/classroom-list/classroom-list.component';
@@ -16,11 +19,15 @@ import { AttendanceManagementComponent } from './components/attendance-managemen
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ReportGenerationComponent } from './components/report-generation/report-generation.component';
 import { ClassroomOverviewComponent } from './components/classroom-overview/classroom-overview.component';
+import { RegisterComponent } from './components/register/register.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
+    ForgotPasswordComponent,
+    ResetPasswordComponent,
+    ProfileComponent,
     DashboardComponent,
     EstablishmentListComponent,
     ClassroomListComponent,
@@ -29,7 +36,8 @@ import { ClassroomOverviewComponent } from './components/classroom-overview/clas
     AttendanceManagementComponent,
     NavbarComponent,
     ReportGenerationComponent,
-    ClassroomOverviewComponent
+    ClassroomOverviewComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,

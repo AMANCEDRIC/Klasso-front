@@ -45,14 +45,23 @@ export class GradeService {
     return this.http.get<Grade[]>(this.apiUrl).pipe(map((response: any) => response.data || response));
   }
 
+  // createGrade(data: CreateGradeRequest): Observable<Grade> {
+  //   return this.fakeBackend.createGrade(data).pipe(
+  //     tap(newGrade => {
+  //       const currentGrades = this.gradesSubject.value;
+  //       this.gradesSubject.next([...currentGrades, newGrade]);
+  //     })
+  //   );
+  // }
+
   createGrade(data: CreateGradeRequest): Observable<Grade> {
-    return this.fakeBackend.createGrade(data).pipe(
+    return this.http.post<Grade>(this.apiUrl, data).pipe(map((response: any) => response.data || response),
       tap(newGrade => {
-        const currentGrades = this.gradesSubject.value;
-        this.gradesSubject.next([...currentGrades, newGrade]);
-      })
-    );
+              const currentGrades = this.gradesSubject.value;
+              this.gradesSubject.next([...currentGrades, newGrade]);
+      }))
   }
+
 
   // getGradesByStudent(studentId: string): Grade[] {
   //   return this.gradesSubject.value.filter(g => g.studentId === studentId);

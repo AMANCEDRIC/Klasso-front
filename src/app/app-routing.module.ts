@@ -4,6 +4,10 @@ import { AuthGuard } from './guards/auth.guard';
 
 // Composants
 import { LoginComponent } from './components/login/login.component';
+import { RegisterComponent } from './components/register/register.component';
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+import { ProfileComponent } from './components/profile/profile.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { EstablishmentListComponent } from './components/establishment-list/establishment-list.component';
 import { ClassroomListComponent } from './components/classroom-list/classroom-list.component';
@@ -17,13 +21,21 @@ const routes: Routes = [
   // Route par défaut - redirection vers le login
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   
-  // Route de connexion (publique)
+  // Routes publiques (authentification)
   { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
   
   // Routes protégées par authentification
   { 
     path: 'dashboard', 
     component: DashboardComponent, 
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'profile', 
+    component: ProfileComponent, 
     canActivate: [AuthGuard] 
   },
   { 

@@ -50,7 +50,9 @@
         </div>
 
         <!-- Profil utilisateur -->
-        <div class="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2">
+        <button
+          (click)="navigateTo('/profile')"
+          class="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors duration-200">
           <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-sm font-medium shadow-sm">
             {{ currentUser?.firstName?.charAt(0) }}{{ currentUser?.lastName?.charAt(0) }}
           </div>
@@ -60,7 +62,7 @@
             </p>
             <p class="text-xs text-gray-500">Administrateur</p>
           </div>
-        </div>
+        </button>
 
         <!-- Bouton déconnexion -->
         <button
@@ -130,11 +132,13 @@
       
       <!-- Section utilisateur mobile -->
       <div class="border-t border-gray-200 pt-3 mt-3">
-        <div class="flex items-center px-3 py-2 bg-gray-50 rounded-md">
+        <button
+          (click)="navigateTo('/profile')"
+          class="w-full flex items-center px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200">
           <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-medium shadow-sm">
             {{ currentUser?.firstName?.charAt(0) }}{{ currentUser?.lastName?.charAt(0) }}
           </div>
-          <div class="ml-3">
+          <div class="ml-3 text-left">
             <p class="text-sm font-medium text-gray-900">
               {{ currentUser?.firstName }} {{ currentUser?.lastName }}
             </p>
@@ -143,7 +147,7 @@
               Administrateur
             </span>
           </div>
-        </div>
+        </button>
         
         <button
           (click)="logout()"

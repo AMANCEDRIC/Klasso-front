@@ -1,14 +1,26 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject, Observable, map, tap, catchError, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, map, tap, catchError, throwError, switchMap, of } from 'rxjs';
 import { Router } from '@angular/router';
-import { User, LoginRequest, AuthResponse } from '../models';
-import { FakeBackendService } from './fake-backend.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { 
+  User, 
+  LoginRequest, 
+  RegisterRequest, 
+  ForgotPasswordRequest, 
+  ResetPasswordRequest,
+  LoginResponse,
+  RegisterResponse,
+  ProfileResponse,
+  ApiResponse,
+  AuthResponse
+} from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private readonly API_BASE_URL = 'http://localhost:8081';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
 
@@ -16,7 +28,7 @@ export class AuthService {
   public isAuthenticated$ = this.currentUser$.pipe(map(user => !!user));
 
   constructor(
-    private fakeBackend: FakeBackendService,
+    private http: HttpClient,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -34,7 +46,7 @@ export class AuthService {
     const token = localStorage.getItem('klaso_token');
     if (token) {
       this.tokenSubject.next(token);
-      this.fakeBackend.getCurrentUser(token).subscribe({
+      this.getProfile().subscribe({
         next: (user) => {
           this.currentUserSubject.next(user);
         },
@@ -46,18 +58,136 @@ export class AuthService {
     }
   }
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+    const headers: { [key: string]: string } = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return new HttpHeaders(headers);
+  }
+
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.fakeBackend.login(credentials).pipe(
+    return this.http.post<LoginResponse>(`${this.API_BASE_URL}/auth/login`, credentials).pipe(
       tap(response => {
-        // Stocker le token et l'utilisateur (seulement côté client)
-        if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem('klaso_token', response.token);
+        if (response.status === 200 && response.data) {
+          // Debug: afficher le token complet
+          console.log('Token reçu:', response.data);
+          console.log('Longueur du token:', response.data.length);
+          
+          // Stocker le token
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem('klaso_token', response.data);
+          }
+          this.tokenSubject.next(response.data);
         }
-        this.tokenSubject.next(response.token);
-        this.currentUserSubject.next(response.user);
+      }),
+      switchMap(response => {
+        if (response.status === 200 && response.data) {
+          // Solution temporaire : créer un utilisateur à partir du token JWT
+          // Décoder le token JWT pour extraire les informations utilisateur
+          try {
+            const tokenPayload = JSON.parse(atob(response.data.split('.')[1]));
+            const user: User = {
+              id: tokenPayload.id,
+              email: tokenPayload.email,
+              firstName: tokenPayload.name?.split(' ')[0] || 'Utilisateur',
+              lastName: tokenPayload.name?.split(' ')[1] || '',
+              createdAt: new Date(tokenPayload.iat * 1000).toISOString(),
+              updatedAt: new Date(tokenPayload.iat * 1000).toISOString()
+            };
+            
+            this.currentUserSubject.next(user);
+            
+            return of({
+              user: user,
+              token: response.data
+            });
+          } catch (error) {
+            console.error('Erreur décodage token:', error);
+            // Fallback : essayer de récupérer le profil
+            return this.getProfile().pipe(
+              map(user => ({
+                user: user,
+                token: response.data
+              }))
+            );
+          }
+        } else {
+          throw new Error('Connexion échouée');
+        }
       }),
       catchError(error => {
         console.error('Erreur de connexion:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  register(userData: RegisterRequest): Observable<User> {
+    return this.http.post<RegisterResponse>(`${this.API_BASE_URL}/auth/register`, userData).pipe(
+      map(response => {
+        if (response.status === 201 && response.data) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Erreur lors de l\'inscription');
+      }),
+      catchError(error => {
+        console.error('Erreur d\'inscription:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  forgotPassword(email: ForgotPasswordRequest): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.API_BASE_URL}/auth/forgot-password`, email).pipe(
+      catchError(error => {
+        console.error('Erreur mot de passe oublié:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  resetPassword(resetData: ResetPasswordRequest): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.API_BASE_URL}/auth/reset-password`, resetData).pipe(
+      catchError(error => {
+        console.error('Erreur réinitialisation mot de passe:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getProfile(): Observable<User> {
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => new Error('Aucun token disponible'));
+    }
+
+    const headers = this.getAuthHeaders();
+    console.log('Headers envoyés pour /auth/me:', headers);
+    console.log('Headers keys:', headers.keys());
+    console.log('Authorization header:', headers.get('Authorization'));
+    console.log('Token utilisé:', token);
+
+    return this.http.get<ProfileResponse>(`${this.API_BASE_URL}/auth/me`, {
+      headers: headers
+    }).pipe(
+      map(response => {
+        if (response.status === 200 && response.data) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Erreur lors de la récupération du profil');
+      }),
+      catchError(error => {
+        console.error('Erreur récupération profil:', error);
+        // Si le token est invalide, on se déconnecte
+        if (error.status === 401) {
+          this.logout();
+        }
         return throwError(() => error);
       })
     );
