@@ -17,6 +17,9 @@ export class StudentListComponent implements OnInit, OnDestroy {
   //classroom: Classroom | undefined;
   classroom!: Classroom;
   students: Student[] = [];
+  // Vue filtrée
+  searchTerm = '';
+  showOnlyActive = false;
   isLoading = false;
   error: string | null = null;
 
@@ -126,6 +129,22 @@ export class StudentListComponent implements OnInit, OnDestroy {
           this.students = students;
         }
       });
+  }
+
+  // Liste affichée (filtrage + tri simple)
+  get displayedStudents(): Student[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    let list = this.students;
+    if (this.showOnlyActive) {
+      list = list.filter(s => (s as any).isActive !== false);
+    }
+    if (term) {
+      list = list.filter(s =>
+        `${s.firstName} ${s.lastName}`.toLowerCase().includes(term) ||
+        (s.email || '').toLowerCase().includes(term)
+      );
+    }
+    return list.slice().sort((a,b) => `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`));
   }
 
   // Gestion des modales
@@ -323,6 +342,10 @@ export class StudentListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/classrooms', this.classroomId, 'attendance'], {
       queryParams: { studentId: student.id }
     });
+  }
+
+  trackByStudent(index: number, student: Student) {
+    return student.id;
   }
 
   // Helpers pour le template
