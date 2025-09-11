@@ -45,16 +45,24 @@ export class AuthService {
 
     const token = localStorage.getItem('klaso_token');
     if (token) {
-      this.tokenSubject.next(token);
-      this.getProfile().subscribe({
-        next: (user) => {
-          this.currentUserSubject.next(user);
-        },
-        error: () => {
-          // Token invalide, on le supprime
-          this.logout();
-        }
-      });
+      // Ne pas appeler le backend ici pour éviter 401 qui déconnecte
+      // Décoder le token local et initialiser l'utilisateur
+      try {
+        this.tokenSubject.next(token);
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const user: User = {
+          id: payload.id,
+          email: payload.email,
+          firstName: payload.name?.split(' ')[0] || 'Utilisateur',
+          lastName: payload.name?.split(' ')[1] || '',
+          createdAt: new Date(payload.iat * 1000).toISOString(),
+          updatedAt: new Date(payload.iat * 1000).toISOString()
+        } as unknown as User;
+        this.currentUserSubject.next(user);
+      } catch (e) {
+        // Si le token est corrompu
+        this.logout();
+      }
     }
   }
 

@@ -9,6 +9,10 @@ export interface Grade {
   gradeDate: Date;
   studentId: string;
   classroomId: string;
+  // Champs d'affichage optionnels renvoyés par l'API
+  studentFirstName?: string | null;
+  studentLastName?: string | null;
+  classroomName?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

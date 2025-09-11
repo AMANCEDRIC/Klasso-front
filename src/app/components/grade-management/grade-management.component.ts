@@ -35,6 +35,8 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
   error: string | null = null;
   isCreateModalOpen = false;
   selectedStudent: Student | null = null;
+  isEditMode = false;
+  editingGradeId: string | null = null;
   
   // Formulaires
   gradeForm: FormGroup;
@@ -131,7 +133,8 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
   // Gestion des modales
   openCreateModal(student?: Student) {
     this.selectedStudent = student || null;
-    
+    this.isEditMode = false;
+    this.editingGradeId = null;
     if (student) {
       this.gradeForm.patchValue({
         studentId: student.id,
@@ -149,13 +152,15 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
   closeModals() {
     this.isCreateModalOpen = false;
     this.selectedStudent = null;
+    this.isEditMode = false;
+    this.editingGradeId = null;
     this.gradeForm.reset();
     this.gradeForm = this.createGradeForm();
   }
 
   // Gestion des formulaires
   onCreateSubmit() {
-    if (this.gradeForm.valid && this.classroomId) {
+    if (this.gradeForm.valid && this.classroomId && !this.isEditMode) {
       this.isLoading = true;
       
       const formData = this.gradeForm.value;
@@ -181,10 +186,83 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
     }
   }
 
+  openEditModal(grade: Grade) {
+    this.isEditMode = true;
+    this.isCreateModalOpen = true;
+    this.editingGradeId = grade.id;
+    this.selectedStudent = this.students.find(s => s.id === grade.studentId) || null;
+    this.gradeForm.patchValue({
+      studentId: grade.studentId,
+      value: grade.value,
+      maxValue: grade.maxValue,
+      coefficient: grade.coefficient,
+      gradeType: grade.gradeType,
+      subject: grade.subject,
+      description: grade.description || '',
+      gradeDate: new Date(grade.gradeDate).toISOString().split('T')[0]
+    });
+  }
+
+  onUpdateSubmit() {
+    if (this.gradeForm.valid && this.classroomId && this.isEditMode && this.editingGradeId) {
+      this.isLoading = true;
+      const formData = this.gradeForm.value;
+      const payload: Partial<CreateGradeRequest> = {
+        value: formData.value,
+        maxValue: formData.maxValue,
+        coefficient: formData.coefficient,
+        gradeType: formData.gradeType,
+        subject: formData.subject,
+        description: formData.description,
+        gradeDate: new Date(formData.gradeDate),
+        classroomId: this.classroomId
+      };
+      this.gradeService.updateGrade(this.editingGradeId, payload).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (updated) => {
+          this.grades = this.grades.map(g => g.id === updated.id ? updated : g);
+          this.calculateAverages();
+          this.closeModals();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.error = 'Erreur lors de la mise à jour de la note';
+          this.isLoading = false;
+          console.error('Erreur:', error);
+        }
+      });
+    }
+  }
+
+  onDeleteGrade(grade: Grade) {
+    if (!confirm('Supprimer cette note ?')) return;
+    this.isLoading = true;
+    this.gradeService.deleteGrade(grade.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.grades = this.grades.filter(g => g.id !== grade.id);
+        this.calculateAverages();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.error = 'Erreur lors de la suppression de la note';
+        this.isLoading = false;
+        console.error('Erreur:', error);
+      }
+    });
+  }
+
   // Méthodes utilitaires
   getStudentName(studentId: string): string {
+    // Chercher d'abord dans la liste des élèves
     const student = this.students.find(s => s.id === studentId);
-    return student ? `${student.firstName} ${student.lastName}` : 'Élève inconnu';
+    if (student) {
+      return `${student.firstName} ${student.lastName}`;
+    }
+    // Sinon, essayer de récupérer depuis les champs du grade courant
+    const anyGrade = this.grades.find(g => g.studentId === studentId);
+    if (anyGrade && (anyGrade.studentFirstName || anyGrade.studentLastName)) {
+      return `${anyGrade.studentFirstName || ''} ${anyGrade.studentLastName || ''}`.trim() || 'Élève inconnu';
+    }
+    return 'Élève inconnu';
   }
 
   getStudentAverage(studentId: string): number {
