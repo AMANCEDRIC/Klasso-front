@@ -37,6 +37,11 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
   selectedStudent: Student | null = null;
   isEditMode = false;
   editingGradeId: string | null = null;
+  // Evaluation (mock front) + saisie en lot
+  isEvaluationModalOpen = false;
+  isBulkStep = false;
+  evaluationForm: FormGroup | null = null;
+  draftGrades: Record<string, { value?: number; status?: 'absent' | 'excused' } > = {};
   
   // Formulaires
   gradeForm: FormGroup;
@@ -51,6 +56,15 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
     [GradeType.PROJECT]: 'Projet'
   };
 
+  getGradeTypeLabel(code: string | null | undefined): string {
+    if (!code) return '';
+    try {
+      return this.gradeTypeLabels[code as GradeType] || String(code);
+    } catch {
+      return String(code);
+    }
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -60,6 +74,7 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
     private classroomService: ClassroomService
   ) {
     this.gradeForm = this.createGradeForm();
+    this.evaluationForm = this.createEvaluationForm();
   }
 
   ngOnInit() {
@@ -88,6 +103,17 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
       subject: ['', Validators.required],
       description: [''],
       gradeDate: [new Date().toISOString().split('T')[0], Validators.required]
+    });
+  }
+
+  private createEvaluationForm(): FormGroup {
+    return this.fb.group({
+      subject: [this.classroom?.subject || '', Validators.required],
+      gradeType: ['', Validators.required],
+      maxValue: [20, [Validators.required, Validators.min(1)]],
+      coefficient: [1, [Validators.required, Validators.min(0.1)]],
+      gradeDate: [new Date().toISOString().split('T')[0], Validators.required],
+      description: ['']
     });
   }
 
@@ -131,6 +157,79 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
   }
 
   // Gestion des modales
+  openEvaluationModal() {
+    this.isEvaluationModalOpen = true;
+    this.isBulkStep = false;
+    this.draftGrades = {};
+    // sync subject default
+    this.evaluationForm?.patchValue({ subject: this.classroom?.subject || '' });
+  }
+
+  closeEvaluationModal() {
+    this.isEvaluationModalOpen = false;
+    this.isBulkStep = false;
+    this.draftGrades = {};
+  }
+
+  proceedToBulk() {
+    if (!this.evaluationForm || !this.evaluationForm.valid) return;
+    // Préparer le brouillon des notes pour tous les élèves
+    this.students.forEach(s => {
+      if (!this.draftGrades[s.id]) {
+        this.draftGrades[s.id] = {};
+      }
+    });
+    this.isBulkStep = true;
+  }
+
+  applySameValueToAll(value: number | null) {
+    if (value === null || value === undefined) return;
+    Object.keys(this.draftGrades).forEach(id => {
+      this.draftGrades[id].value = Number(value);
+      this.draftGrades[id].status = undefined;
+    });
+  }
+
+  markAllAbsent(type: 'absent' | 'excused') {
+    Object.keys(this.draftGrades).forEach(id => {
+      this.draftGrades[id].value = undefined;
+      this.draftGrades[id].status = type;
+    });
+  }
+
+  saveBulkGrades() {
+    if (!this.evaluationForm) return;
+    const evalData = this.evaluationForm.value;
+    const created: Grade[] = [];
+    Object.entries(this.draftGrades).forEach(([studentId, entry]) => {
+      // Si pas de valeur et pas de statut, on ignore
+      if (entry.value === undefined && !entry.status) return;
+      // Règle: excused = exclu du calcul -> on ignore la création d'une note valeur
+      // absent non excusé => 0
+      const value = entry.status === 'excused' ? undefined : (entry.value ?? 0);
+      if (value === undefined) return; // excused, on ne crée pas de note
+      const g: Grade = {
+        id: Math.random().toString(36).slice(2),
+        value: Number(value),
+        maxValue: Number(evalData.maxValue),
+        coefficient: Number(evalData.coefficient),
+        gradeType: evalData.gradeType,
+        subject: evalData.subject,
+        description: evalData.description || '',
+        gradeDate: new Date(evalData.gradeDate),
+        studentId: studentId,
+        classroomId: this.classroomId as string,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as unknown as Grade;
+      created.push(g);
+    });
+
+    // Injecter dans la liste locale
+    this.grades = [...this.grades, ...created];
+    this.calculateAverages();
+    this.closeEvaluationModal();
+  }
   openCreateModal(student?: Student) {
     this.selectedStudent = student || null;
     this.isEditMode = false;
