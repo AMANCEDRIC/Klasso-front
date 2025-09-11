@@ -9,6 +9,8 @@ export interface Grade {
   gradeDate: Date;
   studentId: string;
   classroomId: string;
+  evaluationId?: string;
+  status?: 'PRESENT' | 'ABSENT_JUSTIFIED' | 'ABSENT_UNJUSTIFIED' | 'NOT_SUBMITTED';
   // Champs d'affichage optionnels renvoyés par l'API
   studentFirstName?: string | null;
   studentLastName?: string | null;

@@ -8,6 +8,7 @@ import { Grade, CreateGradeRequest, GradeType, StudentAverage } from '../../mode
 import { Student } from '../../models';
 import { Classroom } from '../../models';
 import { GradeService } from '../../services/grade.service';
+import { EvaluationService } from '../../services/evaluation.service';
 import { StudentService } from '../../services/student.service';
 import { ClassroomService } from '../../services/classroom.service';
 
@@ -70,6 +71,7 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
     private router: Router,
     private fb: FormBuilder,
     private gradeService: GradeService,
+    private evaluationService: EvaluationService,
     private studentService: StudentService,
     private classroomService: ClassroomService
   ) {
@@ -198,37 +200,60 @@ export class GradeManagementComponent implements OnInit, OnDestroy {
   }
 
   saveBulkGrades() {
-    if (!this.evaluationForm) return;
+    if (!this.evaluationForm || !this.classroomId) return;
     const evalData = this.evaluationForm.value;
-    const created: Grade[] = [];
-    Object.entries(this.draftGrades).forEach(([studentId, entry]) => {
-      // Si pas de valeur et pas de statut, on ignore
-      if (entry.value === undefined && !entry.status) return;
-      // Règle: excused = exclu du calcul -> on ignore la création d'une note valeur
-      // absent non excusé => 0
-      const value = entry.status === 'excused' ? undefined : (entry.value ?? 0);
-      if (value === undefined) return; // excused, on ne crée pas de note
-      const g: Grade = {
-        id: Math.random().toString(36).slice(2),
-        value: Number(value),
-        maxValue: Number(evalData.maxValue),
-        coefficient: Number(evalData.coefficient),
-        gradeType: evalData.gradeType,
-        subject: evalData.subject,
-        description: evalData.description || '',
-        gradeDate: new Date(evalData.gradeDate),
-        studentId: studentId,
-        classroomId: this.classroomId as string,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      } as unknown as Grade;
-      created.push(g);
-    });
 
-    // Injecter dans la liste locale
-    this.grades = [...this.grades, ...created];
-    this.calculateAverages();
-    this.closeEvaluationModal();
+    // 1) Créer l'évaluation
+    const payloadEval = {
+      classroomId: Number(this.classroomId),
+      subject: evalData.subject,
+      gradeType: evalData.gradeType,
+      maxValue: Number(evalData.maxValue),
+      coefficient: Number(evalData.coefficient),
+      evaluationDate: evalData.gradeDate,
+      description: evalData.description || null
+    };
+
+    this.isLoading = true;
+    this.evaluationService.createEvaluation(payloadEval).subscribe({
+      next: (evaluation) => {
+        const evaluationId = evaluation.id;
+        // 2) Construire le body grades
+        const gradesBody = {
+          grades: Object.entries(this.draftGrades).flatMap(([sid, entry]) => {
+            // Pas de valeur ni statut -> ignore
+            if (entry.value === undefined && !entry.status) return [] as any[];
+            // Mapping des statuts front -> back
+            const status = entry.status === 'excused'
+              ? 'ABSENT_JUSTIFIED'
+              : (entry.status === 'absent' ? 'ABSENT_UNJUSTIFIED' : 'PRESENT');
+            const val = entry.status ? (entry.status === 'excused' ? undefined : 0) : entry.value;
+            const obj: any = { studentId: Number(sid), status };
+            if (val !== undefined) obj.value = Number(val);
+            return [obj];
+          })
+        };
+
+        this.evaluationService.saveGradesBulk(evaluationId, gradesBody).subscribe({
+          next: (createdDtos) => {
+            // 3) Mettre à jour la liste locale via mapping GradeService
+            const mapped: Grade[] = (createdDtos || []).map((dto: any) => this.gradeService['mapDtoToGrade'](dto));
+            this.grades = [...this.grades, ...mapped];
+            this.calculateAverages();
+            this.isLoading = false;
+            this.closeEvaluationModal();
+          },
+          error: (err) => {
+            console.error('Erreur enregistrement notes bulk:', err);
+            this.isLoading = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Erreur création évaluation:', err);
+        this.isLoading = false;
+      }
+    });
   }
   openCreateModal(student?: Student) {
     this.selectedStudent = student || null;
