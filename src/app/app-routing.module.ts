@@ -16,6 +16,8 @@ import { GradeManagementComponent } from './components/grade-management/grade-ma
 import { AttendanceManagementComponent } from './components/attendance-management/attendance-management.component';
 import { ReportGenerationComponent } from './components/report-generation/report-generation.component';
 import { ClassroomOverviewComponent } from './components/classroom-overview/classroom-overview.component';
+import { EvaluationListComponent } from './components/evaluation-list/evaluation-list.component';
+import { EvaluationDetailComponent } from './components/evaluation-detail/evaluation-detail.component';
 
 const routes: Routes = [
   // Route par défaut - redirection vers le login
@@ -67,6 +69,16 @@ const routes: Routes = [
     path: 'classrooms/:classroomId/grades', 
     component: GradeManagementComponent, 
     canActivate: [AuthGuard] 
+  },
+  {
+    path: 'classrooms/:classroomId/evaluations',
+    component: EvaluationListComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'evaluations/:evaluationId',
+    component: EvaluationDetailComponent,
+    canActivate: [AuthGuard]
   },
   { 
     path: 'classrooms/:classroomId/attendances', 

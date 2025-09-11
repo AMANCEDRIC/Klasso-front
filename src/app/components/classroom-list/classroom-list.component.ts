@@ -312,6 +312,10 @@ export class ClassroomListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/classrooms', classroom.id, 'grades']);
   }
 
+  viewEvaluations(classroom: Classroom): void {
+    this.router.navigate(['/classrooms', classroom.id, 'evaluations']);
+  }
+
   viewAttendance(classroom: Classroom): void {
     this.router.navigate(['/classrooms', classroom.id, 'attendances']);
   }

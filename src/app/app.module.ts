@@ -21,6 +21,8 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { ReportGenerationComponent } from './components/report-generation/report-generation.component';
 import { ClassroomOverviewComponent } from './components/classroom-overview/classroom-overview.component';
 import { RegisterComponent } from './components/register/register.component';
+import { EvaluationListComponent } from './components/evaluation-list/evaluation-list.component';
+import { EvaluationDetailComponent } from './components/evaluation-detail/evaluation-detail.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +40,9 @@ import { RegisterComponent } from './components/register/register.component';
     NavbarComponent,
     ReportGenerationComponent,
     ClassroomOverviewComponent,
-    RegisterComponent
+    RegisterComponent,
+    EvaluationListComponent,
+    EvaluationDetailComponent
   ],
   imports: [
     BrowserModule,
