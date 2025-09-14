@@ -5,6 +5,7 @@ import { Classroom, CreateClassroomRequest } from '../models';
 import { FakeBackendService } from './fake-backend.service';
 import { AuthService } from './auth.service';
 import {HttpClient} from '@angular/common/http';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,8 @@ import {HttpClient} from '@angular/common/http';
 export class ClassroomService {
   private classroomsSubject = new BehaviorSubject<Classroom[]>([]);
   public classrooms$ = this.classroomsSubject.asObservable();
-  private apiUrl = 'http://localhost:8081/api/classrooms';
+  //private apiUrl = 'http://localhost:8081/api/classrooms';
+  private apiUrl = environment.apiUrl;
 
   constructor(
     private fakeBackend: FakeBackendService,
@@ -33,7 +35,7 @@ export class ClassroomService {
   // }
 
   getClassrooms():Observable<Classroom[]>{
-    return this.http.get<Classroom[]>(this.apiUrl).pipe(map((response: any) => response.data))
+    return this.http.get<Classroom[]>(`${this.apiUrl}/classrooms/`).pipe(map((response: any) => response.data))
   }
 
   createClassroom(data: CreateClassroomRequest): Observable<Classroom> {
@@ -44,7 +46,7 @@ export class ClassroomService {
 
     console.log('Données envoyées pour création:', { ...data, userId: currentUser.id });
 
-    return this.http.post<Classroom>(this.apiUrl, { ...data, userId: currentUser.id }).pipe(
+    return this.http.post<Classroom>(`${this.apiUrl}/classrooms/`, { ...data, userId: currentUser.id }).pipe(
       map((response: any) => response.data || response),
       tap(newClassroom => {
         console.log('Classe créée:', newClassroom);
@@ -55,7 +57,7 @@ export class ClassroomService {
   }
 
   updateClassroom(id: string, data: Partial<CreateClassroomRequest>): Observable<Classroom> {
-    return this.http.put<Classroom>(`${this.apiUrl}/${id}`, data).pipe(
+    return this.http.put<Classroom>(`${this.apiUrl}/classrooms/${id}`, data).pipe(
       map((response: any) => response.data || response),
       tap(updatedClassroom => {
         const currentClassrooms = this.classroomsSubject.value;
@@ -69,7 +71,7 @@ export class ClassroomService {
   }
 
   deleteClassroom(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete<void>(`${this.apiUrl}/classrooms/${id}`).pipe(
       tap(() => {
         const currentClassrooms = this.classroomsSubject.value;
         const filtered = currentClassrooms.filter(c => c.id !== id);
@@ -79,13 +81,13 @@ export class ClassroomService {
   }
 
   getClassroomById(id: string): Observable<Classroom> {
-    return this.http.get<Classroom>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<Classroom>(`${this.apiUrl}/classrooms/${id}`).pipe(
       map((response: any) => response.data || response)
     );
   }
 
   getClassroomByEstablishmentId(establishmentId: string): Observable<Classroom[]> {
-    return this.http.get<Classroom[]>(`${this.apiUrl}/establishment/${establishmentId}`).pipe(
+    return this.http.get<Classroom[]>(`${this.apiUrl}/classrooms/establishment/${establishmentId}`).pipe(
       map((response: any) => response.data || response)
     );
   }

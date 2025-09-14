@@ -3,11 +3,11 @@ import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable, map, tap, catchError, throwError, switchMap, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { 
-  User, 
-  LoginRequest, 
-  RegisterRequest, 
-  ForgotPasswordRequest, 
+import {
+  User,
+  LoginRequest,
+  RegisterRequest,
+  ForgotPasswordRequest,
   ResetPasswordRequest,
   LoginResponse,
   RegisterResponse,
@@ -15,12 +15,16 @@ import {
   ApiResponse,
   AuthResponse
 } from '../models';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_BASE_URL = 'http://localhost:8081';
+
+  //private readonly API_BASE_URL = 'http://localhost:8081/api';
+  private readonly API_BASE_URL = environment.apiUrl;
+
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
 
@@ -71,11 +75,11 @@ export class AuthService {
     const headers: { [key: string]: string } = {
       'Content-Type': 'application/json'
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return new HttpHeaders(headers);
   }
 
@@ -86,7 +90,7 @@ export class AuthService {
           // Debug: afficher le token complet
           console.log('Token reçu:', response.data);
           console.log('Longueur du token:', response.data.length);
-          
+
           // Stocker le token
           if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem('klaso_token', response.data);
@@ -108,9 +112,9 @@ export class AuthService {
               createdAt: new Date(tokenPayload.iat * 1000).toISOString(),
               updatedAt: new Date(tokenPayload.iat * 1000).toISOString()
             };
-            
+
             this.currentUserSubject.next(user);
-            
+
             return of({
               user: user,
               token: response.data

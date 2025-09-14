@@ -3,6 +3,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Attendance, CreateAttendanceRequest, AttendanceStats, AttendanceStatus } from '../models';
 import { FakeBackendService } from './fake-backend.service';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +11,7 @@ import { FakeBackendService } from './fake-backend.service';
 export class AttendanceService {
   private attendancesSubject = new BehaviorSubject<Attendance[]>([]);
   public attendances$ = this.attendancesSubject.asObservable();
+  private apiUrl = environment.apiUrl;
 
   constructor(private fakeBackend: FakeBackendService) {}
 
@@ -43,19 +45,19 @@ export class AttendanceService {
   }
 
   getAttendancesByDate(date: Date): Attendance[] {
-    return this.attendancesSubject.value.filter(a => 
+    return this.attendancesSubject.value.filter(a =>
       a.date.toDateString() === date.toDateString()
     );
   }
 
   calculateStudentAttendanceStats(studentId: string): AttendanceStats {
     const studentAttendances = this.getAttendancesByStudent(studentId);
-    
+
     const totalDays = studentAttendances.length;
     const presentDays = studentAttendances.filter(a => a.status === AttendanceStatus.PRESENT).length;
     const absentDays = studentAttendances.filter(a => a.status === AttendanceStatus.ABSENT).length;
     const lateDays = studentAttendances.filter(a => a.status === AttendanceStatus.LATE).length;
-    
+
     const attendanceRate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
     return {
@@ -71,15 +73,15 @@ export class AttendanceService {
   calculateClassroomAttendanceStats(classroomId: string): AttendanceStats[] {
     const classroomAttendances = this.getAttendancesByClassroom(classroomId);
     const studentIds = [...new Set(classroomAttendances.map(a => a.studentId))];
-    
+
     return studentIds.map(studentId => this.calculateStudentAttendanceStats(studentId));
   }
 
   getClassroomAttendanceRate(classroomId: string): number {
     const studentStats = this.calculateClassroomAttendanceStats(classroomId);
-    
+
     if (studentStats.length === 0) return 0;
-    
+
     const totalRate = studentStats.reduce((acc, curr) => acc + curr.attendanceRate, 0);
     return Math.round((totalRate / studentStats.length) * 100) / 100;
   }
@@ -88,7 +90,7 @@ export class AttendanceService {
   bulkCreateAttendance(attendanceList: CreateAttendanceRequest[]): Observable<Attendance[]> {
     // Pour la simulation, on traite chaque présence individuellement
     const promises = attendanceList.map(data => this.createAttendance(data));
-    
+
     // On pourrait utiliser forkJoin ici pour une vraie API
     return new Observable(observer => {
       Promise.all(promises.map(obs => obs.toPromise())).then(results => {

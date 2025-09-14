@@ -5,6 +5,7 @@ import { Establishment, CreateEstablishmentRequest } from '../models';
 import { FakeBackendService } from './fake-backend.service';
 import { AuthService } from './auth.service';
 import {HttpClient} from '@angular/common/http';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,8 @@ export class EstablishmentService {
   private establishmentsSubject = new BehaviorSubject<Establishment[]>([]);
   public establishments$ = this.establishmentsSubject.asObservable();
 
-  private apiUrl='http://localhost:8081/api/establishments';
+  //private apiUrl='http://localhost:8081/api/establishments';
+  private apiUrl = environment.apiUrl;
 
   constructor(
     private http:HttpClient,
@@ -45,7 +47,7 @@ export class EstablishmentService {
   // }
 
   getEstablishments(): Observable<Establishment[]> {
-    return this.http.get<Establishment[]>(this.apiUrl).pipe(map((response: any) => response.data));
+    return this.http.get<Establishment[]>(`${this.apiUrl}/establishments`).pipe(map((response: any) => response.data));
   }
 
   // createEstablishment(data: CreateEstablishmentRequest): Observable<Establishment> {
@@ -68,7 +70,7 @@ export class EstablishmentService {
       throw new Error('Utilisateur non connecté');
     }
 
-    return this.http.post<Establishment>(this.apiUrl, { ...data, userId: currentUser.id }).pipe(
+    return this.http.post<Establishment>(`${this.apiUrl}/establishments`, { ...data, userId: currentUser.id }).pipe(
       map((response: any) => response.data || response),
       tap(newEstablishment => {
         console.log('Nouvel établissement créé:', newEstablishment);
@@ -92,7 +94,7 @@ export class EstablishmentService {
   // }
 
   updateEstablishment(id: string, data: Partial<CreateEstablishmentRequest>): Observable<Establishment> {
-    return this.http.put<Establishment>(`${this.apiUrl}/${id}`, data).pipe(
+    return this.http.put<Establishment>(`${this.apiUrl}/establishments/${id}`, data).pipe(
       map((response: any) => response.data || response),
       tap(updatedEstablishment => {
         console.log('Établissement modifié:', updatedEstablishment);
@@ -117,7 +119,7 @@ export class EstablishmentService {
   // }
 
   deleteEstablishment(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete<void>(`${this.apiUrl}/establishments/${id}`).pipe(
       tap(() => {
         console.log('Établissement supprimé, ID:', id);
         const currentEstablishments = this.establishmentsSubject.value;
@@ -132,6 +134,6 @@ export class EstablishmentService {
   // }
 
   getEstablishmentById(id:String):Observable<{ data:Establishment }>{
-  return this.http.get<{ data:Establishment }>(`${this.apiUrl}/${id}`)
+  return this.http.get<{ data:Establishment }>(`${this.apiUrl}/establishments/${id}`)
   }
 }

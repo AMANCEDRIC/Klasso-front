@@ -4,6 +4,7 @@ import {map, tap} from 'rxjs/operators';
 import { Student, CreateStudentRequest } from '../models';
 import { FakeBackendService } from './fake-backend.service';
 import { HttpClient } from '@angular/common/http';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,8 @@ import { HttpClient } from '@angular/common/http';
 export class StudentService {
   private studentsSubject = new BehaviorSubject<Student[]>([]);
   public students$ = this.studentsSubject.asObservable();
-  public apiUrl = 'http://localhost:8081/api/students';
+  //public apiUrl = 'http://localhost:8081/api/students';
+  private apiUrl = environment.apiUrl;
 
   constructor(private fakeBackend: FakeBackendService, private http: HttpClient) {}
 
@@ -30,11 +32,11 @@ export class StudentService {
   // }
 
   getStudents(): Observable<Student[]> {
-    return this.http.get<Student[]>(this.apiUrl).pipe(map((response: any) => response.data || response));
+    return this.http.get<Student[]>(`${this.apiUrl}/students`).pipe(map((response: any) => response.data || response));
   }
 
   getStudentsByClassroom(classroomId: string): Observable<Student[]> {
-    return this.http.get<Student[]>(`${this.apiUrl}/classroom/${classroomId}`)
+    return this.http.get<Student[]>(`${this.apiUrl}/students/classroom/${classroomId}`)
       .pipe(
         map((response: any) => response.data || response),
         tap(students => console.log('Élèves récupérés de l\'API pour la classe', classroomId, ':', students))
@@ -42,7 +44,7 @@ export class StudentService {
   }
 
   createStudent(data: CreateStudentRequest): Observable<Student> {
-    return this.http.post<Student>(this.apiUrl, data).pipe(
+    return this.http.post<Student>(`${this.apiUrl}/students`, data).pipe(
       map((response: any) => response.data || response),
       tap(newStudent => {
         console.log('Nouvel élève créé:', newStudent);
@@ -53,7 +55,7 @@ export class StudentService {
   }
 
   updateStudent(id:string, data: Partial<CreateStudentRequest>): Observable<Student> {
-    return this.http.put<Student>(`${this.apiUrl}/${id}`, data).pipe(
+    return this.http.put<Student>(`${this.apiUrl}/students/${id}`, data).pipe(
       map((response: any) => response.data || response),
       tap(updatedStudent => {
         console.log('Élève mis à jour:', updatedStudent);
@@ -68,7 +70,7 @@ export class StudentService {
   }
 
   deleteStudent(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete<void>(`${this.apiUrl}/students/${id}`).pipe(
       tap(() => {
         console.log('Élève supprimé, ID:', id);
         const students = this.studentsSubject.value;
@@ -79,7 +81,7 @@ export class StudentService {
   }
 
   getStudentById(id: string): Observable<Student> {
-    return this.http.get<Student>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<Student>(`${this.apiUrl}/students/${id}`).pipe(
       map((response: any) => response.data || response),
       tap(student => console.log('Élève récupéré par ID:', id, student))
     );

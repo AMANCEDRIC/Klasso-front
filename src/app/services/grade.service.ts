@@ -3,6 +3,7 @@ import { Observable, BehaviorSubject, map, tap } from 'rxjs';
 import { Grade, CreateGradeRequest, StudentAverage } from '../models';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,8 @@ import { AuthService } from './auth.service';
 export class GradeService {
   private gradesSubject = new BehaviorSubject<Grade[]>([]);
   public grades$ = this.gradesSubject.asObservable();
-  private apiUrl = 'http://localhost:8081/api/grades';
+  //private apiUrl = 'http://localhost:8081/api/grades';
+  private apiUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
@@ -48,7 +50,7 @@ export class GradeService {
   // API calls
   loadGrades(classroomId: string): Observable<Grade[]> {
     return this.fromApi<Grade[]>(
-      this.http.get(`${this.apiUrl}/classroom/${classroomId}`)
+      this.http.get(`${this.apiUrl}/grades/classroom/${classroomId}`)
     ).pipe(
       map((list: any[]) => (list || []).map((g) => this.mapDtoToGrade(g))),
       tap((grades) => this.gradesSubject.next(grades))
@@ -57,7 +59,7 @@ export class GradeService {
 
   loadStudentGrades(studentId: string): Observable<Grade[]> {
     return this.fromApi<Grade[]>(
-      this.http.get(`${this.apiUrl}/student/${studentId}`)
+      this.http.get(`${this.apiUrl}/grades/student/${studentId}`)
     ).pipe(
       map((list: any[]) => (list || []).map((g) => this.mapDtoToGrade(g))),
       tap((grades) => {
@@ -124,7 +126,7 @@ export class GradeService {
       payload.classroom = { id: Number(data.classroomId) };
     }
     return this.fromApi<any>(
-      this.http.put(`${this.apiUrl}/${id}`, payload)
+      this.http.put(`${this.apiUrl}/grades/${id}`, payload)
     ).pipe(
       map((dto) => this.mapDtoToGrade(dto)),
       tap((updated) => {
@@ -136,7 +138,7 @@ export class GradeService {
 
   deleteGrade(id: string): Observable<void> {
     return this.fromApi<any>(
-      this.http.delete(`${this.apiUrl}/${id}`)
+      this.http.delete(`${this.apiUrl}/grades/${id}`)
     ).pipe(
       tap(() => {
         const list = this.gradesSubject.value.filter((g) => g.id !== id);
@@ -153,13 +155,13 @@ export class GradeService {
 
   getGradesByStudent(studentId: string): Observable<Grade[]> {
     return this.fromApi<any[]>(
-      this.http.get(`${this.apiUrl}/student/${studentId}`)
+      this.http.get(`${this.apiUrl}/grades/student/${studentId}`)
     ).pipe(map((list) => (list || []).map((g) => this.mapDtoToGrade(g))));
   }
 
   getGradesByStudentInClass(studentId: string, classroomId: string): Observable<Grade[]> {
     return this.fromApi<any[]>(
-      this.http.get(`${this.apiUrl}/student/${studentId}/classroom/${classroomId}`)
+      this.http.get(`${this.apiUrl}/grades/student/${studentId}/classroom/${classroomId}`)
     ).pipe(map((list) => (list || []).map((g) => this.mapDtoToGrade(g))));
   }
 
