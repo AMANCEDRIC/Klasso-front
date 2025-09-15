@@ -1,9 +1,8 @@
 {
-<<<<<<< HEAD
   "version": 2,
   "framework": "none",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/klaso/browser ",
+  "outputDirectory": "dist/klaso/browser",
   "routes": [
     {
       "src": "/(.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|map))",
@@ -15,9 +14,3 @@
 }
 
 
-=======
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ]
-}
->>>>>>> dde9f5a042063f8556276475400bc4068910ad5f
