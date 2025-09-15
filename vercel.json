@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "framework": "none",
+  "framework": "angular",
   "buildCommand": "npm run build",
   "outputDirectory": "dist/klaso/browser",
   "routes": [
