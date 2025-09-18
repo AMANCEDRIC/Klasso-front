@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://mon-api.onrender.com/api'
+  apiUrl: 'https://klasso-back-production.up.railway.app/api'
 };
